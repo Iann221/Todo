@@ -1,20 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app_coba/todo.dart';
 import 'package:intl/intl.dart';
 
+import 'helper.dart';
+
 class AddScreen extends StatefulWidget {
+  final Function updateTodo;
+
+  AddScreen({this.updateTodo});
+
   @override
   _AddScreenState createState() => _AddScreenState();
 }
 
+class Pilihan{
+  const Pilihan(this.kode, this.warna);
+  final int kode;
+  final Container warna;
+}
+
 class _AddScreenState extends State<AddScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _warna;
+  bool isNewTaskFinalized = false;
+  int _kodewarna;
   String _title = '';
   DateTime _date = DateTime.now();
+  String _time = '';
   String _description = '';
+
   TextEditingController _dateController = TextEditingController();
 
   final List<String> _warnas = ['merah','biru','hijau'];
+  List<Pilihan> pilihans = [
+    Pilihan(1, Container(color: Colors.red, width: 100, height: 10)),
+    Pilihan(2, Container(color: Colors.green, width: 100, height: 10)),
+    Pilihan(3, Container(color: Colors.blue, width: 100, height: 10)),
+  ];
+
   final DateFormat _dateFormatter = DateFormat('yMd');
 
   @override
@@ -40,10 +62,19 @@ class _AddScreenState extends State<AddScreen> {
 
   _submit(){
     _formKey.currentState.save();
-    print('$_warna,$_title,$_date,$_description');
+    print('$_title,$_kodewarna,$_date,$_time,$_description,$isNewTaskFinalized');
 
     // insert task
-
+    Todo newTodo = Todo(
+      judul: _title,
+      udah: (isNewTaskFinalized) ? 1 : 0,
+      warna: _kodewarna,
+      date: _date,
+      waktu: _time,
+      desk: _description,
+    );
+    Helper.instance.insertTodo(newTodo);
+    widget.updateTodo();
     Navigator.pop(context);
   }
 
@@ -64,27 +95,42 @@ class _AddScreenState extends State<AddScreen> {
                   Row(
                     children: [
                       Checkbox(
-                        value: false,
-                        onChanged: null,
+                        value: isNewTaskFinalized,
                         activeColor: Colors.orange[400],
+                        onChanged: (newValue){ // kalo checkbox diubah
+                          setState(() {
+                            isNewTaskFinalized = newValue;
+                          });
+                        }
                       ),
-
+                      Text(
+                        'Finalize',
+                        style: TextStyle(
+                          fontSize: 18.0
+                        ),
+                      ),
+                      SizedBox(
+                        width: 50.0,
+                      ),
+                      Expanded(
+                        child:
+                          DropdownButtonFormField(
+                            decoration: InputDecoration(labelText:'Color'),
+                            items: pilihans.map((Pilihan warna){ //map = list itu diapain
+                              return DropdownMenuItem(
+                                value: warna.kode,
+                                child: warna.warna,
+                              );
+                            }).toList(),
+                            onChanged: (value){
+                              setState((){
+                                _kodewarna = value;
+                              });
+                            },
+                            value: _kodewarna
+                        ),
+                      ),
                     ],
-                  ),
-                  DropdownButtonFormField(
-                    decoration: InputDecoration(labelText:'Color'),
-                    items: _warnas.map((String warna){
-                      return DropdownMenuItem(
-                        value: warna,
-                        child: Text(warna),
-                      );
-                    }).toList(),
-                    onChanged: (value){
-                      setState((){
-                        _warna = value;
-                      });
-                    },
-                    value: _warna
                   ),
                   TextFormField(
                     decoration: InputDecoration(labelText:'Title'),
@@ -92,11 +138,28 @@ class _AddScreenState extends State<AddScreen> {
                     onSaved: (input) => _title = input,
                     initialValue: _title,
                   ),
-                  TextFormField(
-                    readOnly: true,
-                    controller: _dateController,
-                    onTap: _handleDatePicker,
-                    decoration: InputDecoration(labelText:'Date'),
+                  Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            readOnly: true,
+                            controller: _dateController,
+                            onTap: _handleDatePicker,
+                            decoration: InputDecoration(labelText:'Date'),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 30.0,
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            decoration: InputDecoration(labelText:'Time'),
+                            keyboardType: TextInputType.text,
+                            onSaved: (input) => _time = input,
+                            initialValue: _time,
+                          ),
+                        )
+                      ]
                   ),
                   TextFormField(
                     decoration: InputDecoration(labelText:'Description'),
