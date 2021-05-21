@@ -57,6 +57,29 @@ class Helper{
     return todoList;
   }
 
+  // filter todos
+  Future<List<Todo>> searchTodoList(queryString) async{
+    Database db = await this.db;
+    final List<Map<String,dynamic>> result = await db.query('$tabelTodo', where: "$colJudul LIKE ?", whereArgs: ['%$queryString%']);
+    final List<Todo> todoList = [];
+    result.forEach((todoMap){
+      todoList.add(Todo.fromMap(todoMap));
+    });
+    return todoList;
+  }
+
+  // nyari yg done
+  Future<List<Todo>> getDoneTodoList() async{
+    final List<Map<String, dynamic>> todoMapList = await getTodoMapList();
+    final List<Todo> todoList = [];
+    todoMapList.forEach((todoMap){
+      if(todoMap['udah'] == 1){
+        todoList.add(Todo.fromMap(todoMap));
+      }
+    });
+    return todoList;
+  }
+
   // masukin todos ke db as map
   Future<int> insertTodo(Todo todo) async{
     print('masukin todo');
