@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app_coba/todo.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
 import 'helper.dart';
 
@@ -27,8 +28,11 @@ class _AddScreenState extends State<AddScreen> {
   DateTime _date = DateTime.now();
   String _time = '';
   String _description = '';
+  final df = new DateFormat('hh:mm a');
+  final DateFormat _dateFormatter = DateFormat('yMd');
 
-  TextEditingController _dateController = TextEditingController();
+  TextEditingController _dateController = new TextEditingController();
+  TextEditingController _timeController = new TextEditingController();
 
   final List<String> _warnas = ['merah','biru','hijau'];
   List<Pilihan> pilihans = [
@@ -37,27 +41,43 @@ class _AddScreenState extends State<AddScreen> {
     Pilihan(3, Container(color: Colors.blue, width: 100, height: 10)),
   ];
 
-  final DateFormat _dateFormatter = DateFormat('yMd');
-
   @override
   void dispose(){
     _dateController.dispose();
     super.dispose();
   }
 
+  // _handleDatePicker() async{
+  //   final DateTime date = await showDatePicker(
+  //       context: context,
+  //       initialDate: _date,
+  //       firstDate: DateTime(2000),
+  //       lastDate: DateTime(2030),
+  //   );
+  //   if (date != null && date != _date){
+  //     setState((){
+  //       _date = date;
+  //     });
+  //     _dateController.text = _dateFormatter.format(date);
+  //   }
+  // }
+
   _handleDatePicker() async{
-    final DateTime date = await showDatePicker(
-        context: context,
-        initialDate: _date,
-        firstDate: DateTime(2000),
-        lastDate: DateTime(2030),
-    );
-    if (date != null && date != _date){
-      setState((){
-        _date = date;
-      });
-      _dateController.text = _dateFormatter.format(date);
-    }
+    DateTime date = await DatePicker.showDatePicker(
+      context,
+      showTitleActions: true,
+      currentTime: DateTime.now(), locale: LocaleType.en);
+    if(date != null) setState(() => _date = date);
+    _dateController.text = _dateFormatter.format(_date);
+  }
+
+  _handleTimePicker() async{
+    DateTime time = await DatePicker.showTime12hPicker(
+      context,
+      showTitleActions: true,
+      currentTime: DateTime.now(), locale: LocaleType.en);
+    if(time != null) setState(() => _time = df.format(time));
+    _timeController.text = (_time);
   }
 
   _submit(){
@@ -74,7 +94,7 @@ class _AddScreenState extends State<AddScreen> {
       desk: _description,
     );
     Helper.instance.insertTodo(newTodo);
-    widget.updateTodo();
+    widget.updateTodo(false);
     Navigator.pop(context);
   }
 
@@ -151,14 +171,22 @@ class _AddScreenState extends State<AddScreen> {
                         SizedBox(
                           width: 30.0,
                         ),
+                        // Expanded(
+                        //   child: TextFormField(
+                        //     decoration: InputDecoration(labelText:'Time'),
+                        //     keyboardType: TextInputType.text,
+                        //     onSaved: (input) => _time = input,
+                        //     initialValue: _time,
+                        //   ),
+                        // )
                         Expanded(
                           child: TextFormField(
+                            readOnly: true,
+                            controller: _timeController,
+                            onTap: _handleTimePicker,
                             decoration: InputDecoration(labelText:'Time'),
-                            keyboardType: TextInputType.text,
-                            onSaved: (input) => _time = input,
-                            initialValue: _time,
                           ),
-                        )
+                        ),
                       ]
                   ),
                   TextFormField(
